@@ -1,0 +1,7 @@
+*.cbp
+*.layout
+*.exe
+*.o
+*.hex
+*.map
+*.elf

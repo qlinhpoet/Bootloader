@@ -41,7 +41,7 @@ startup_stm32f407vgtx.o:
 	$(ASM) $(AOPS) $(ASM_FILES) $< -o $(OUTPUT_PATH)/$@
 
 run:
-	$(STLink_DIR)/ST-LINK_CLI.exe -p "./Debug/$(PROJ_NAME).hex" 0x08000000
+	$(STLink_DIR)/ST-LINK_CLI.exe -p "./output/$(PROJ_NAME).hex" 0x08000000
 	$(STLink_DIR)/ST-LINK_CLI.exe -rst
 
 erase:
