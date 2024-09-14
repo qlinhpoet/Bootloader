@@ -11,7 +11,7 @@ int main(void)
   MX_GPIO_Init();
   USART2_Init();		//uart init
 
-  while (1)
+  //while (1)
   {
 	  UART_Transmit(USART2, TxData, sizeof(TxData));
 
@@ -22,7 +22,7 @@ int main(void)
 		  UART_Transmit1byte(USART2, '\n');
 	  }
 
-	  BlinkLed(500);
+	  BlinkLed(100);
 	  if( (GPIOA->IDR & 0x01) == 0x01)		//button pressed
 	  {
 		  GPIOD->ODR |= 1<<15;

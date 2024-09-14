@@ -4,7 +4,8 @@ void SystemClock_Config(void);
 void BlinkLedD12(uint32_t tDelay);
 int main(void)
 {
-
+//3.Vector Table Relocation in Internal FLASH
+//SCB->VTOR = 0x08008000U;
   HAL_Init();
   SystemClock_Config();
 

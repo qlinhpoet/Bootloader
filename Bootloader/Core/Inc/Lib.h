@@ -7,6 +7,7 @@
 
 #ifndef INC_LIB_H_
 #define INC_LIB_H_
+#define FLASH_SECTOR2_BASE_ADDRESS 0x08008000U
 
 void SystemClock_Config(void);
 void MX_GPIO_Init(void);

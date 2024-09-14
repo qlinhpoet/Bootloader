@@ -142,5 +142,21 @@ void bootloader_uart_read_data(void)
 
 void bootloader_jump_to_user_app(void)
 {
-  
+	   //declare a function pointer to hold the address of the reset handler of the user app.
+	    int (*app_reset_handler)(void);
+
+	    // 1. configure the MSP by reading the value from the base address of the sector 2
+	    uint32_t msp_value = *(volatile uint32_t *)FLASH_SECTOR2_BASE_ADDRESS;
+	    //This function comes from CMSIS.
+	    __set_MSP(msp_value);
+
+	    // 2. fetch reset_handler addr of the user application from FLASH_SECTOR2_BASE_ADDRESS+4
+	    uint32_t resethandler_address = *(volatile uint32_t *) (FLASH_SECTOR2_BASE_ADDRESS + 4);
+	    app_reset_handler = (void*) resethandler_address;
+
+      //3.Vector Table Relocation to SECTOR 2
+      SCB->VTOR = FLASH_SECTOR2_BASE_ADDRESS;
+
+	    //4. jump to reset handler of the user application
+	    app_reset_handler();
 }
