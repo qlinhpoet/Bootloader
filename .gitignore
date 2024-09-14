@@ -6,3 +6,6 @@
 *.map
 *.elf
 *.bin
+BlinkLed_makefile/Debug/
+Bootloader/Debug/
+UART/Debug/

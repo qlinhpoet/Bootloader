@@ -19,4 +19,5 @@ void Error_Handler(void);
 FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG);
 
 void bootloader_uart_read_data(void);
+void bootloader_jump_to_user_app(void);
 #endif /* INC_LIB_H_ */

@@ -139,3 +139,8 @@ void bootloader_uart_read_data(void)
 {
 
 }
+
+void bootloader_jump_to_user_app(void)
+{
+  
+}
