@@ -11,28 +11,27 @@ int main(void)
   MX_GPIO_Init();
   USART2_Init();		//uart init
 
-  //while (1)
+  UART_Transmit(USART2, TxData, sizeof(TxData));
+  if( (USART2->SR & (0x0020)) == (0x0020) )		//if data is received, clear bit by a read to USART_DR reg
   {
-	  UART_Transmit(USART2, TxData, sizeof(TxData));
+	  RxData = UART_Receive(USART2);
+	  UART_Transmit1byte(USART2, RxData);
+	  UART_Transmit1byte(USART2, '\n');
+  }
+  if( (GPIOA->IDR & 0x01) == 0x01)		//button pressed
+  {
+	  GPIOD->ODR |= 1<<15;
+	  bootloader_uart_read_data();
+  }
+  else
+  {
+	  GPIOD->ODR &= ~1<<15;
+	  bootloader_jump_to_user_app();
+  }
 
-	  if( (USART2->SR & (0x0020)) == (0x0020) )		//if data is received, clear bit by a read to USART_DR reg
-	  {
-		  RxData = UART_Receive(USART2);
-		  UART_Transmit1byte(USART2, RxData);
-		  UART_Transmit1byte(USART2, '\n');
-	  }
-
+  while(1)
+  {
 	  BlinkLed(100);
-	  if( (GPIOA->IDR & 0x01) == 0x01)		//button pressed
-	  {
-		  GPIOD->ODR |= 1<<15;
-		  bootloader_uart_read_data();
-	  }
-	  else
-	  {
-		  GPIOD->ODR &= ~1<<15;
-		  bootloader_jump_to_user_app();
-	  }
   }
 
 }

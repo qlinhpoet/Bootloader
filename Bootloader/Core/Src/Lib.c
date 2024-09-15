@@ -7,6 +7,9 @@
 #include "stm32f4xx_hal.h"
 #include "Lib.h"
 
+#define BL_RX_LEN  200
+uint8_t bl_rx_buffer[BL_RX_LEN];
+
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -137,7 +140,47 @@ FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG)
 
 void bootloader_uart_read_data(void)
 {
+	uint8_t Rx_Length = 0;
+	uint8_t Rx_Cmd = 0;
+	while(1)
+	{
+		//receive first byte - is length
+		HAL_UART_Receive(USART2, bl_rx_buffer, 1, 0xFFFFFFFFU);
+		Rx_Length = bl_rx_buffer[0];
 
+		HAL_UART_Receive(USART2, bl_rx_buffer[1], Rx_Length, 0xFFFFFFFFU);
+		Rx_Cmd = bl_rx_buffer[1];
+
+		switch (Rx_Cmd)
+		{
+			case BL_GET_VER :
+				bootloader_handle_getver_cmd(bl_rx_buffer);
+				break;
+			case BL_GET_HELP :
+				break;
+			case BL_GET_CID :
+				break;
+			case BL_GET_RDP_STATUS :
+				break;
+			case BL_GO_TO_ADDR :
+				break;
+			case BL_FLASH_ERASE :
+				break;
+			case BL_MEM_WRITE :
+				break;
+			case BL_EN_RW_PROTECT :
+				break;
+			case BL_MEM_READ :
+				break;
+			case BL_READ_SECTOR_P_STATUS :
+				break;
+			case BL_OTP_READ :
+				break;
+			case BL_DIS_R_W_PROTECT :
+				break;
+		}
+
+	}
 }
 
 void bootloader_jump_to_user_app(void)
@@ -159,4 +202,71 @@ void bootloader_jump_to_user_app(void)
 
 	    //4. jump to reset handler of the user application
 	    app_reset_handler();
+}
+
+/* boot loader handle fucntion */
+void bootloader_handle_getver_cmd(uint8_t* RxBuffer)
+{
+	uint8_t bl_version;
+
+	//get RxBuffer total length
+	uint32_t RxBuffer_Length = RxBuffer[0]+1;
+
+	//host CRC value is stored in last 4 byte of RxBuffer
+	uint32_t host_CRC = *(uint32_t *)(RxBuffer + RxBuffer_Length - 4);
+
+	//calculate RxCRC from RxBuffer, dismiss last 4 byte
+	uint32_t RxCRC = CRC_Calculation(RxBuffer, RxBuffer_Length-4);
+
+	if(host_CRC == RxCRC)
+	{
+		//CRC is correct
+		bootloader_send_ack(bl_rx_buffer[0],1);
+		bl_version=get_bootloader_version();
+		bootloader_uart_write_data(&bl_version,1);
+	}
+	else
+	{
+		//CRC is wrong
+		bootloader_send_nack();
+	}
+
+}
+
+uint8_t get_bootloader_version(void)
+{
+  return (uint8_t)BL_VERSION;
+}
+
+/* This function writes data in to C_UART */
+void bootloader_uart_write_data(uint8_t *pBuffer,uint32_t len)
+{
+    /*you can replace the below ST's USART driver API call with your MCUs driver API call */
+	HAL_UART_Transmit(USART2,pBuffer,len,HAL_MAX_DELAY);
+
+}
+
+uint32_t CRC_Calculation(uint32_t* pInputCRC, uint32_t u32Length)
+{
+	/*enable clock for CRC*/
+	RCC->AHB1ENR |= 1<<12;
+	/*Resets the CRC calculation unit and sets the data reg to 0xFFFF FFFF*/
+	CRC->CR |= 0x01;
+	/*calculate CRC*/
+	for(int i=0; i<u32Length; i++)
+	{
+		CRC->DR = *(pInputCRC+i);
+	}
+	return CRC->DR;
+}
+
+/*This function sends ACK if CRC matches along with "len to follow"*/
+void bootloader_send_ack(uint8_t command_code, uint8_t follow_len)
+{
+
+}
+
+void bootloader_send_nack(void)
+{
+
 }
