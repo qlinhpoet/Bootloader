@@ -9,3 +9,4 @@
 BlinkLed_makefile/Debug/
 Bootloader/Debug/
 UART/Debug/
+Flash/Debug/

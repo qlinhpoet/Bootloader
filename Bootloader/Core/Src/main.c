@@ -2,7 +2,7 @@
 #include "Lib.h"
 
 
-uint8_t RxData = 0;
+uint8_t RxData[20];
 uint8_t TxData[10] = "QuangLinh\n";
 int main(void)
 {
@@ -11,15 +11,9 @@ int main(void)
   MX_GPIO_Init();
   USART2_Init();		//uart init
 
-  UART_Transmit(USART2, TxData, sizeof(TxData));
-  if( (USART2->SR & (0x0020)) == (0x0020) )		//if data is received, clear bit by a read to USART_DR reg
-  {
-	  RxData = UART_Receive(USART2);
-	  UART_Transmit1byte(USART2, RxData);
-	  UART_Transmit1byte(USART2, '\n');
-  }
   if( (GPIOA->IDR & 0x01) == 0x01)		//button pressed
   {
+	  //bootloader led blue
 	  GPIOD->ODR |= 1<<15;
 	  bootloader_uart_read_data();
   }
@@ -31,7 +25,7 @@ int main(void)
 
   while(1)
   {
-	  BlinkLed(100);
+	  BlinkLed(12, 100);
   }
 
 }
