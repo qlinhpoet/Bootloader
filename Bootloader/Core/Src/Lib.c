@@ -4,8 +4,7 @@
  *  Created on: Sep 6, 2024
  *      Author: Linh
  */
-#include "stm32f4xx_hal.h"
-#include "FlashLib.h"
+
 #include "Lib.h"
 
 #define BL_RX_LEN  20
@@ -89,38 +88,6 @@ void USART2_Init(void)
 	UART_Init.Init.StopBits = UART_STOPBITS_1;
 	UART_Init.Init.WordLength = UART_WORDLENGTH_8B;
 	HAL_UART_Init(&UART_Init);
-}
-
-void UART_Receive(USART_TypeDef* huart, uint8_t* RxBuffer, uint8_t RxSize)
-{
-	uint8_t i = 0;
-	uint32_t timeout = 0xffff;
-	while(i < RxSize && timeout > 0)
-	{
-		if( (USART2->SR & (0x0020)) == (0x0020) )		//if data is received, clear bit by a read to USART_DR reg
-		{
-			*(RxBuffer + i) =  huart->DR;
-			i++;
-			timeout = 0xffff;
-		}
-		timeout--;
-	}
-}
-
-void UART_Transmit1byte(USART_TypeDef* huart, uint8_t data)
-{
-	//send data - both 8, 9 bits
-	huart->DR = (uint16_t)data & 0x01FF;
-	//TXE - 1:data tranfered to shift register
-	while( (huart->SR & (1<<7)) != (1<<7));
-}
-
-void UART_Transmit(USART_TypeDef* huart, uint8_t* data, uint32_t datasize)
-{
-	for(int i=0; i<datasize; i++)
-	{
-		UART_Transmit1byte(huart, *(data+i));
-	}
 }
 
 void BlinkLed(uint8_t ledNum, uint32_t msecond)

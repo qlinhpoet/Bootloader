@@ -9,7 +9,7 @@ int main(void)
   HAL_Init();
   SystemClock_Config();
   MX_GPIO_Init();
-  USART2_Init();		//uart init
+  UART_Init(USART2);		//uart init
 
   if( (GPIOA->IDR & 0x01) == 0x01)		//button pressed
   {
@@ -20,17 +20,21 @@ int main(void)
   else
   {
 	  GPIOD->ODR &= ~1<<15;
-	  bootloader_jump_to_user_app();
+	  //bootloader_jump_to_user_app();
   }
 
   while(1)
   {
+	  UART_Transmit(USART2, "linh\n", 5);
 	  BlinkLed(12, 100);
   }
 
 }
 
+void USART2_IRQHandler(void)
+{
 
+}
 
 
 #ifdef  USE_FULL_ASSERT
