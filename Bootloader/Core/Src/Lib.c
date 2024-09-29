@@ -7,9 +7,9 @@
 
 #include "Lib.h"
 
-#define BL_RX_LEN  20
+#define BL_RX_LEN  200
 uint8_t bl_rx_buffer[BL_RX_LEN];
-uint8_t nocmd[] = "no cmd\n";
+uint8_t nocmd[] = "no cmd";
 _Bool inTesting = 1;
 void SystemClock_Config(void)
 {
@@ -125,7 +125,7 @@ void bootloader_uart_read_data(void)
 	((UART_HandleTypeDef*)USART2)->RxState = HAL_UART_STATE_READY;
 	while(1)
 	{
-		resetBuffer(bl_rx_buffer, sizeof(bl_rx_buffer));
+		memset(bl_rx_buffer,0,200);
 		//receive first byte - is length
 		UART_Receive(USART2, bl_rx_buffer, 1);
 		Rx_Length = bl_rx_buffer[0];
@@ -154,18 +154,21 @@ void bootloader_uart_read_data(void)
 				bootloader_handle_mem_write_cmd(bl_rx_buffer);
 				break;
 			case BL_EN_RW_PROTECT :
+				bootloader_handle_en_rw_protect(bl_rx_buffer);
 				break;
 			case BL_MEM_READ :
 				break;
 			case BL_READ_SECTOR_P_STATUS :
 				break;
 			case BL_OTP_READ :
+				bootloader_handle_read_otp(bl_rx_buffer);
 				break;
 			case BL_DIS_R_W_PROTECT :
+				bootloader_handle_dis_rw_protect(bl_rx_buffer);
 				break;
 		}
 		//BlinkLed(14, 1000);
-		bootloader_uart_write_data(nocmd, sizeof(nocmd));
+		//bootloader_uart_write_data(nocmd, sizeof(nocmd));
 
 	}
 }
@@ -256,6 +259,7 @@ void bootloader_handle_flash_erase_cmd(uint8_t* RxBuffer)
 		GPIOD->ODR |= 1<<14;
 		Flash_Erase(RxBuffer[2], RxBuffer[3]);
 		GPIOD->ODR &= ~(1<<14);
+		bootloader_uart_write_data("Flash erase done...\n", 20);
 	}
 	else
 	{
@@ -274,16 +278,84 @@ void bootloader_handle_mem_write_cmd(uint8_t* RxBuffer)
 	{
 		if( Addr_valid(mem_address) )
 		{
-			bootloader_uart_write_data("Memory writing...\n", 18);
+			//bootloader_uart_write_data("Memory writing...\n", 18);
 			//on led 14 - red
 			GPIOD->ODR |= 1<<14;
 			Flash_Write(mem_address, payload_len, &RxBuffer[7]);
 			GPIOD->ODR &= ~(1<<14);
+			//bootloader_uart_write_data("Flash write done...\n", 20);
 		}
 		else
 		{
 
 		}
+	}
+	else
+	{
+		//CRC is wrong
+		bootloader_uart_write_data(" Wrong CRC\n", 11);
+		bootloader_send_nack();
+	}
+}
+
+/*
+	nWRP : flash mem write protection option bytes
+ */
+void bootloader_handle_en_rw_protect(uint8_t* RxBuffer)
+{
+	uint16_t SectorDetail = *( (uint16_t *) &RxBuffer[2] );
+	if(bootloader_verify_CRC(RxBuffer) | inTesting)
+	{
+		Flash_RW_Protect(SectorDetail);
+	}
+	else
+	{
+		//CRC is wrong
+		bootloader_uart_write_data(" Wrong CRC\n", 11);
+		bootloader_send_nack();
+	}
+}
+
+void bootloader_handle_read_otp(uint8_t* RxBuffer)
+{
+	if(bootloader_verify_CRC(RxBuffer) | inTesting)
+	{
+
+		uint16_t Opt1Value = 0;
+		uint16_t Opt2Value = 0;
+		Flash_Read_OptByte(&Opt1Value, &Opt2Value);
+		bootloader_uart_write_data("1: Inactive Protect, 0: Active Protect\n", 39);
+		for(int i=0; i<=11; i++)
+		{
+			if(i<10)
+			{
+				uint8_t infor[] = "sector 0x: x\n";
+				infor[8] = i+48;
+				infor[11] = ( ( Opt2Value & (1<<i) ) == (1<<i) ) + 48;
+				bootloader_uart_write_data(infor, sizeof(infor));
+			}
+			else
+			{
+				uint8_t infor[] = "sector 1x: x\n";
+				infor[8] = i-10+48;
+				infor[11] = ( ( Opt2Value & (1<<i) ) == (1<<i) ) + 48;
+				bootloader_uart_write_data(infor, sizeof(infor));
+			}
+		}
+	}
+	else
+	{
+		//CRC is wrong
+		bootloader_uart_write_data(" Wrong CRC\n", 11);
+		bootloader_send_nack();
+	}
+}
+
+void bootloader_handle_dis_rw_protect(uint8_t* RxBuffer)
+{
+	if(bootloader_verify_CRC(RxBuffer) | inTesting)
+	{
+		Flash_RW_Protect(0xfff);
 	}
 	else
 	{
@@ -335,6 +407,11 @@ void bootloader_uart_write_data(uint8_t *pBuffer,uint32_t len)
 {
     /*you can replace the below ST's USART driver API call with your MCUs driver API call */
 	UART_Transmit(USART2,pBuffer,len);
+
+}
+
+uint8_t configure_flash_sector_rw_protection(uint8_t sector_details, uint8_t protection_mode, uint8_t disable)
+{
 
 }
 

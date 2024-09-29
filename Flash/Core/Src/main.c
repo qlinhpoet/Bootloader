@@ -4,14 +4,17 @@ void SystemClock_Config(void);
 
 uint8_t bufferRead[20];
 uint8_t bufferwrite[11] = {1,2,3,4,5,6,7,8,9,10,11};
+uint16_t optValue[2];
 int main(void)
 {
 
   HAL_Init();
   SystemClock_Config();
-  Flash_Write(0x080E0000, 11, &bufferwrite);
-  Flash_Read(0x080E0000, &bufferRead, 11);
-  Flash_Erase(11, 2);
+  //Flash_Write(0x080E0000, 11, &bufferwrite);
+  //Flash_Read(0x080E0000, &bufferRead, 11);
+  //Flash_Erase(11, 2);
+  Flash_RW_Protect(0x0f);
+  Flash_Read_OptByte(optValue);
   while (1)
   {
 

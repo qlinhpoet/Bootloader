@@ -189,3 +189,61 @@ bool Flash_Lock(void)
 {
 	FLASH->CR |= 1<<31;
 }
+
+
+bool Flash_OPT_Unlock(void)
+{
+	//check OPT Lock bit
+	if(FLASH->OPTCR & 0x01 == 0x01)
+	{
+		/* Authorize the FLASH Registers access */
+		FLASH->OPTKEYR = 0x08192A3BU;
+		FLASH->OPTKEYR = 0x4C5D6E7FU;
+		if(FLASH->OPTCR & 0x01 != RESET)
+		{
+		 return notOk;
+		}
+		return Ok;
+	}
+}
+
+bool Flash_OPT_lock(void)
+{
+	FLASH->OPTCR |= 0x01;
+}
+
+/*
+1. Check that no Flash memory operation is ongoing by checking the BSY bit in the
+FLASH_SR register
+2. Write the desired option value in the FLASH_OPTCR register.
+3. Set the option start bit (OPTSTRT) in the FLASH_OPTCR register
+4. Wait for the BSY bit to be cleared
+*/
+void Flash_RW_Protect(uint16_t SectorDetail)
+{
+	(void)Flash_OPT_Unlock();
+	uint32_t u32TimeOut = 0xffffffff;
+	// 1.Check that no Flash memory operation is ongoing
+	while(((FLASH->SR & FLASH_SR_BSY) == FLASH_SR_BSY) && (u32TimeOut > 0U))
+	{
+		/*  Wating for Bsy bit */
+		u32TimeOut --;
+		if (u32TimeOut == 0)
+		{
+			//return FLASH_ERRORS_TIMEOUT;
+			return notOk;
+		}
+	}
+	FLASH->OPTCR &= ~(0xffff << 16);
+	FLASH->OPTCR |= ((SectorDetail & 0x0fff) << 16);
+	FLASH->OPTCR |= 1<<1;
+	while((FLASH->SR & FLASH_SR_BSY) == FLASH_SR_BSY);
+	(void)Flash_OPT_Unlock();
+}
+
+void Flash_Read_OptByte(uint32_t* pOpt1Value, uint32_t* pOpt2Value)
+{
+	*pOpt1Value = *((uint16_t*) 0x1fffc000);
+	*pOpt2Value = *((uint16_t*) 0x1fffc008);
+}
+

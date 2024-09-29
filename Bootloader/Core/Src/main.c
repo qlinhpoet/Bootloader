@@ -20,7 +20,7 @@ int main(void)
   else
   {
 	  GPIOD->ODR &= ~1<<15;
-	  //bootloader_jump_to_user_app();
+	  bootloader_jump_to_user_app();
   }
 
   while(1)

@@ -1,37 +1,47 @@
 #include "main.h"
-
+#include "UartLib.h"
 void SystemClock_Config(void);
-void BlinkLedD12(uint32_t tDelay);
+void MX_GPIO_Init(void);
+void BlinkLed(uint8_t ledNum, uint32_t msecond);
+void USART2_IRQHandler(void);
+uint8_t bufferRead[20];
+uint8_t bufferwrite[11] = {1,2,3,4,5,6,7,8,9,10,11};
+uint8_t appHello[] = "hello from application\n";
 int main(void)
 {
-//3.Vector Table Relocation in Internal FLASH
-//SCB->VTOR = 0x08008000U;
-  HAL_Init();
-  SystemClock_Config();
 
+   HAL_Init();
+  SystemClock_Config();
+  MX_GPIO_Init();
+  UART_Init(USART2);
   while (1)
   {
-	  BlinkLedD12(1000);
+	  UART_Transmit(USART2, appHello, sizeof(appHello));
+	  BlinkLed(12, 1000);
   }
 }
 
-void BlinkLedD12(uint32_t tDelay)
+void RCC_Config(void)
 {
-	//enable GIPOD clock
-	RCC->AHB1ENR |= 1<<3;
 
-	//PD12...15 : output mode
-	GPIOD->MODER &= 0x00ffffff;
-	GPIOD->MODER |= 0x55000000;
-
-	//Blink Led D12
-	GPIOD->ODR |= 1<<12;
-	HAL_Delay(tDelay);
-	GPIOD->ODR &= ~(1<<12);
-	HAL_Delay(tDelay);
 }
-
-
+void USART2_IRQHandler(void)
+{
+	//RXNEIE
+	if( (USART2->CR1 & (0x0020)) == (0x0020) )
+	{
+		UART_Receive(USART2, bufferRead, sizeof(bufferRead));
+	}
+	//clear RXNE bit
+	USART2->SR &= ~(1<<5);
+}
+void BlinkLed(uint8_t ledNum, uint32_t msecond)
+{
+	  GPIOD->ODR |= 1<<ledNum;
+	  HAL_Delay(msecond);
+	  GPIOD->ODR &= ~1<<ledNum;
+	  HAL_Delay(msecond);
+}
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -71,7 +81,21 @@ void Error_Handler(void)
 {
 
 }
+void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+  /*Configure GPIO pin : PD12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+}
 #ifdef  USE_FULL_ASSERT
 
 void assert_failed(uint8_t *file, uint32_t line)

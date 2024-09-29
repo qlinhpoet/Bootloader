@@ -32,8 +32,8 @@ void UART_Init(USART_TypeDef* pUSART)
 	pUSART->CR3 &= ~(1<<7);
 	//5. baudrate 9600
 	pUSART->CR1 &= ~(1<<15);	//over8 = 0
-	//pUSART->BRR = 0x683;		//9600
-	pUSART->BRR = 0x8B;			//115200
+	pUSART->BRR = 0x8B;
+
 	//non parity
 	pUSART->CR1 &= ~(1<<10);
 	//TX enable
@@ -43,10 +43,9 @@ void UART_Init(USART_TypeDef* pUSART)
 	/*00 - hardware flow control disabled*/
 	pUSART->CR3 &= ~(3<<8);
 
-	/* USART2 interrupt config */
 	//RXNEIE: RXNE interrupt enable
-	//pUSART->CR1 |= 1<<5;
-	//NVIC->ISER[1] |= 1<<6;
+	pUSART->CR1 |= 1<<5;
+	NVIC->ISER[1] |= 1<<6;
 }
 
 void UART_Receive(USART_TypeDef* huart, uint8_t* RxBuffer, uint8_t RxSize)

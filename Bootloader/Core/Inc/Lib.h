@@ -30,6 +30,8 @@ void bootloader_handle_getver_cmd(uint8_t* RxBuffer);
 void bootloader_handle_go_cmd(uint8_t* RxBuffer);
 void bootloader_handle_flash_erase_cmd(uint8_t* RxBuffer);
 void bootloader_handle_mem_write_cmd(uint8_t* RxBuffer);
+void bootloader_handle_en_rw_protect(uint8_t* RxBuffer);
+void bootloader_handle_read_otp(uint8_t* RxBuffer);
 _Bool bootloader_verify_CRC(uint8_t* RxBuffer);
 
 uint8_t get_bootloader_version(void);

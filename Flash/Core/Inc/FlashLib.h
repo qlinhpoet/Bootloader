@@ -22,5 +22,8 @@ bool Flash_MassErase(void);
 bool Flash_SectorErase(uint8_t SectorNum, uint32_t u32TimeOut);
 bool Flash_Unlock(void);
 bool Flash_Lock(void);
+bool Flash_OPT_Unlock(void);
+bool Flash_OPT_lock(void);
+void Flash_RW_Protect(uint16_t SectorDetail);
 
 #endif /* INC_FLASHLIB_H_ */
