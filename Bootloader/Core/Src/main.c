@@ -11,7 +11,7 @@ int main(void)
   MX_GPIO_Init();
   UART_Init(USART2);		//uart init
 
-  if( (GPIOA->IDR & 0x01) == 0x01)		//button pressed
+  if( (GPIOA->IDR & 0x01) == 0x01)		//PA0 user button pressed
   {
 	  //bootloader led blue
 	  GPIOD->ODR |= 1<<15;
