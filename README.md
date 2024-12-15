@@ -5,7 +5,7 @@ How to flash app sw via bootloader.
 
 0. Flash bootloader to chip
 
-1.  Build sw with base addr = 0x8008000 (fls sector 2 base addr)
+1.  Build sw with base addr = 0x8008000 (fls sector 2 base addr), not re-write value for VTOR
     Copy and rename .bin file to ./Host/user_app.bin
 
 2. Wired - PC <-> USB TTL <-> STM32(UART Tx/Rx)
